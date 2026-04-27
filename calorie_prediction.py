@@ -27,10 +27,20 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
 
+def read_table(path: str) -> pd.DataFrame:
+    """Read CSV or Excel files according to the file extension."""
+    lower_path = path.lower()
+    if lower_path.endswith(".csv"):
+        return pd.read_csv(path)
+    if lower_path.endswith(".xlsx") or lower_path.endswith(".xls"):
+        return pd.read_excel(path)
+    raise ValueError(f"Unsupported file type: {path}. Please use .csv, .xlsx or .xls")
+
+
 def load_and_preprocess(exercise_path: str, calories_path: str):
     """Load exercise/calorie files, merge them and build train/test features."""
-    exercise_df = pd.read_excel(exercise_path)
-    calories_df = pd.read_excel(calories_path)
+    exercise_df = read_table(exercise_path)
+    calories_df = read_table(calories_path)
 
     merged_df = exercise_df.merge(calories_df, on="User_ID", how="inner")
     merged_df["Gender_encoded"] = merged_df["Gender"].map({"female": 0, "male": 1})
@@ -144,8 +154,8 @@ def create_bar_chart(labels, values, title: str, filename: str, bar_color="green
 
 def main():
     parser = argparse.ArgumentParser(description="Calorie expenditure prediction project")
-    parser.add_argument("--exercise", default="data/Exercise.csv.xlsx", help="Path to Exercise.csv.xlsx")
-    parser.add_argument("--calories", default="data/Calories.csv.xlsx", help="Path to Calories.csv.xlsx")
+    parser.add_argument("--exercise", default="data/Exercise.csv.xlsx", help="Path to Exercise.csv/.xlsx")
+    parser.add_argument("--calories", default="data/Calories.csv.xlsx", help="Path to Calories.csv/.xlsx")
     parser.add_argument("--output", default="results", help="Directory for result tables")
     parser.add_argument("--figures", default="figures", help="Directory for output figures")
     args = parser.parse_args()
@@ -161,6 +171,7 @@ def main():
 
     result_file = os.path.join(args.output, "model_results.xlsx")
     results_df.to_excel(result_file, index=False)
+    results_df.to_csv(os.path.join(args.output, "model_results.csv"), index=False)
     print(results_df.to_string(index=False))
     print(f"\nSaved result table: {result_file}")
 
